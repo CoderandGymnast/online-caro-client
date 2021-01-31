@@ -20,6 +20,7 @@
 
 #define BUFF_SIZE 2048
 #define RESPONSE_SIZE 3
+#define TIME_OUT 3
 
 using namespace std;
 
@@ -67,11 +68,18 @@ int main(int argc, char* argv[]) {
 		ret = send(client, buff, strlen(buff), 0);
 		if (ret == SOCKET_ERROR)
 			printf("Error! Cannot send message.\n");
+		
 
-		ret = recv(client, buff, BUFF_SIZE, 0);
+		for (int i = 0; i < TIME_OUT; i++) {
+			ret = recv(client, buff, BUFF_SIZE, 0);
+			if (ret != SOCKET_ERROR) break;
+		}
+
 		if (ret == SOCKET_ERROR) {
-			if (WSAGetLastError() == WSAETIMEDOUT)
+			if (WSAGetLastError() == WSAETIMEDOUT) {
+				ret = recv(client, buff, BUFF_SIZE, 0);
 				printf("Time-out!\n");
+			}
 			else printf("Error! Cannot receive message.\n");
 		}
 		else if (strlen(buff) > 0) {
