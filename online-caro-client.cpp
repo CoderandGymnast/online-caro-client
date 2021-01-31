@@ -19,30 +19,9 @@
 #pragma comment (lib, "Ws2_32.lib")
 
 #define BUFF_SIZE 2048
-
-#define USERNAME_OPERATION '1'
-#define PASSWORD_OPERATION '2'
-#define LOGOUT_OPERATION '3'
-
-#define USERNAME_SUCCESS "10"
-#define USERNAME_NOT_FOUND "11"
-#define ACCOUNT_IS_BLOCKED "12"
-#define ACCOUNT_IS_LOGGED_IN "13"
-#define PASSWORD_SUCCESS "20"
-#define PASSWORD_INCORRECT "21"
-#define LOGOUT_SUCCESS "30"
-
 #define RESPONSE_SIZE 3
 
-void processResponse(char* response);
-void printOperation();
-void processState();
-void constructMessage(char* data, char* message);
-void processUsername(char* response);
-void processPassword(char* response);
-void processLogout(char* response);
-
-int state = 1; /* 1: Enter username; 2: Enter password; 3: Logged in.  */
+using namespace std;
 
 int main(int argc, char* argv[]) {
 
@@ -78,23 +57,14 @@ int main(int argc, char* argv[]) {
 	int ret;
 
 	do {
-		printOperation();
+		cout << "message: ";
 		gets_s(buff, BUFF_SIZE);
 		if (strlen(buff) == 0) {
 			closesocket(client);
 			return 0;
 		}
 
-		if (state == int((LOGOUT_OPERATION)-48)) {
-			if (strcmp(buff, "0")) {
-				printf("Unknown operation. Please, enter again.\n");
-				continue;
-			}
-		}
-
-		constructMessage(buff, message);
-
-		ret = send(client, message, strlen(message), 0);
+		ret = send(client, buff, strlen(buff), 0);
 		if (ret == SOCKET_ERROR)
 			printf("Error! Cannot send message.\n");
 
@@ -106,7 +76,7 @@ int main(int argc, char* argv[]) {
 		}
 		else if (strlen(buff) > 0) {
 			buff[ret] = '\0';
-			processResponse(buff);
+			cout << buff << endl;
 		}
 	} while (1);
 
@@ -117,125 +87,6 @@ int main(int argc, char* argv[]) {
 	_getch();
 	return 0;
 }
-
-/*
-* Process response from server.
-* @param     response     server response.
-*/
-void processResponse(char* response) {
-	char code = response[0];
-	switch (code) {
-	case USERNAME_OPERATION:
-		processUsername(response);
-		break;
-	case PASSWORD_OPERATION:
-		processPassword(response);
-		break;
-	case LOGOUT_OPERATION:
-		processLogout(response);
-		break;
-	default:
-		printf("[ERROR]: Unknown response\n");
-		break;
-	}
-}
-
-/*
-* Print the required operation for the user.
-*/
-void printOperation() {
-	switch (state) {
-	case 1:
-		printf("Enter username: ");
-		break;
-	case 2:
-		printf("Enter password: ");
-		break;
-	case 3:
-		printf("1. Enter '0': Log out.\n2. Press 'Enter': Exit.\n\nEnter operation: ");
-		break;
-	default:
-		printf("[ERROR]: Unknown state\n");
-		break;
-	}
-}
-
-/*
-* Process the state of this application.
-*/
-void processState() {
-	if (1 <= state && state <= 2) state++;
-	else state = 1;
-}
-
-/*
-* Construct the message according to the form: CODE + DATA.
-* @param     data    [IN] The data is going to be sent to the server.
-* @param     message    [OUT] The constructed message.
-*/
-void constructMessage(char* data, char* message) {
-	sprintf(message, "%d", state);
-	strcat(message, data);
-}
-
-/*
-* Process the username from the server for the 'username' request.
-* @param     response     The response from the server.
-*/
-void processUsername(char* response) {
-	if (strcmp(response, USERNAME_SUCCESS) == 0) processState();
-	else if (strcmp(response, USERNAME_NOT_FOUND) == 0) {
-		printf("Username was not found. Please, enter again.\n");
-		state = int(USERNAME_OPERATION) - 48;
-	}
-	else if (strcmp(response, ACCOUNT_IS_BLOCKED) == 0) {
-		printf("This account is blocked. Please, use others.\n");
-		state = int(USERNAME_OPERATION) - 48;
-	}
-	else if (strcmp(response, ACCOUNT_IS_LOGGED_IN) == 0) {
-		printf("This account is already logged in. Please, use others.\n");
-	}
-	else {
-		printf("[ERROR]: Unknown operation\n");
-	}
-}
-
-/*
-* Process the password from the server for the 'password' request.
-* @param     response     The response from the server.
-*/
-void processPassword(char* response) {
-	if (strcmp(response, PASSWORD_SUCCESS) == 0) {
-		processState();
-		printf("Logged in\n\n");
-	}
-	else if (strcmp(response, PASSWORD_INCORRECT) == 0) {
-		printf("Password was not found. Please, enter again.\n");
-		state = int(PASSWORD_OPERATION) - 48;
-	}
-	else if (strcmp(response, ACCOUNT_IS_BLOCKED) == 0) {
-		printf("This account is blocked. Please, use others.\n");
-		state = int(USERNAME_OPERATION) - 48;
-	}
-	else printf("[ERROR]: Unknown operation\n");
-}
-
-/*
-* Process the response from the server for the 'log out' request.
-* @param     response     The response from the server.
-*/
-void processLogout(char* response) {
-	if (strcmp(response, LOGOUT_SUCCESS) == 0) {
-		printf("Logged out\n\n");
-		processState();
-	}
-	else printf("[ERROR]: Unknown operation\n");
-}
-
-
-
-
-
 
 /*
 * [NOTES]:
