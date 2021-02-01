@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 	/* NOTE: deamon process listen to server. */
 	SOCKET deamonCli = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	int res = setupDeamonCli(deamonCli, serverAddr);
-	thread deamon(worker, deamonCli);
+	thread deamon(worker, deamonCli); // NOTE: must init additional threads inside main thread.
 
 	SOCKET client;
 	client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -66,7 +66,9 @@ int main(int argc, char* argv[]) {
 	char message[BUFF_SIZE + 2];
 	int ret;
 
+	int requestCounter = 0;
 	do {
+		cout << "\n" << ++requestCounter << ". (main) request: ";
 		gets_s(buff, BUFF_SIZE);
 		if (strlen(buff) == 0) {
 			closesocket(client);
@@ -87,7 +89,7 @@ int main(int argc, char* argv[]) {
 		}
 		else if (strlen(buff) > 0) {
 			buff[ret] = '\0';
-			cout <<  "(main) response: '" << buff << "'" << endl;
+			cout <<  "\n(main) response: '" << buff << "'" << endl;
 		}
 	} while (1);
 
