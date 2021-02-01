@@ -15,6 +15,7 @@
 #include <math.h> 
 #include <string>
 #include <iostream>
+#include <thread>
 
 #pragma comment (lib, "Ws2_32.lib")
 
@@ -23,6 +24,9 @@
 #define TIME_OUT 3
 
 using namespace std;
+
+int setupDeamonCli(SOCKET deamonCli, sockaddr_in serverAddr);
+void worker(SOCKET deamonCli);
 
 int main(int argc, char* argv[]) {
 
@@ -40,10 +44,15 @@ int main(int argc, char* argv[]) {
 	serverAddr.sin_port = htons(SERVER_PORT);
 	serverAddr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
 
+	/* NOTE: deamon process listen to server. */
+	SOCKET deamonCli = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	int res = setupDeamonCli(deamonCli, serverAddr);
+	thread deamon(worker, deamonCli);
+
 	SOCKET client;
 	client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-	int tv = 10000;
+	int tv = 5000; // NOTE: 5-second timeout.
 	setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, (const char*)(&tv), sizeof(int));
 
 
@@ -58,7 +67,6 @@ int main(int argc, char* argv[]) {
 	int ret;
 
 	do {
-		cout << "message: ";
 		gets_s(buff, BUFF_SIZE);
 		if (strlen(buff) == 0) {
 			closesocket(client);
@@ -69,22 +77,17 @@ int main(int argc, char* argv[]) {
 		if (ret == SOCKET_ERROR)
 			printf("Error! Cannot send message.\n");
 		
-
-		for (int i = 0; i < TIME_OUT; i++) {
-			ret = recv(client, buff, BUFF_SIZE, 0);
-			if (ret != SOCKET_ERROR) break;
-		}
+		ret = recv(client, buff, BUFF_SIZE, 0);
 
 		if (ret == SOCKET_ERROR) {
 			if (WSAGetLastError() == WSAETIMEDOUT) {
-				ret = recv(client, buff, BUFF_SIZE, 0);
 				printf("Time-out!\n");
 			}
 			else printf("Error! Cannot receive message.\n");
 		}
 		else if (strlen(buff) > 0) {
 			buff[ret] = '\0';
-			cout << buff << endl;
+			cout <<  "(main) response: '" << buff << "'" << endl;
 		}
 	} while (1);
 
@@ -94,6 +97,37 @@ int main(int argc, char* argv[]) {
 
 	_getch();
 	return 0;
+}
+
+int setupDeamonCli(SOCKET deamonCli, sockaddr_in serverAddr) {
+
+	int tv = 60000;
+	setsockopt(deamonCli, SOL_SOCKET, SO_RCVTIMEO, (const char*)(&tv), sizeof(int));
+
+	if (connect(deamonCli, (sockaddr*)&serverAddr, sizeof(serverAddr))) {
+		cout << "error: cannot connect server - " << WSAGetLastError() << endl;
+		return 0;
+	}
+
+	return 1;
+}
+
+void worker(SOCKET deamonCli) {
+
+	char buff[BUFF_SIZE];
+	int ret;
+
+	while (1) {
+		ret = recv(deamonCli, buff, BUFF_SIZE, 0);
+		/*
+		if (ret < 0) cout << "\ndeamon error: socket " << (int)deamonCli << " closed" << endl; 
+		*/
+		if (ret < 0) continue;
+		else {
+			buff[ret] = 0;
+			cout << "\n(deamon) response: '" << buff << "'" << endl;
+		}
+	}
 }
 
 /*
