@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 	WORD wVersion = MAKEWORD(2, 2);
 	if (WSAStartup(wVersion, &wsaData)) printf("Version is not supported\n");
 
-	printf("Client started\n");
+	cout << "\nconnected\n" << endl;
 
 	sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
@@ -66,9 +66,7 @@ int main(int argc, char* argv[]) {
 	char message[BUFF_SIZE + 2];
 	int ret;
 
-	int requestCounter = 0;
 	do {
-		cout << "\n" << ++requestCounter << ". (main) request: ";
 		gets_s(buff, BUFF_SIZE);
 		if (strlen(buff) == 0) {
 			closesocket(client);
@@ -89,7 +87,7 @@ int main(int argc, char* argv[]) {
 		}
 		else if (strlen(buff) > 0) {
 			buff[ret] = '\0';
-			cout <<  "\n(main) response: '" << buff << "'" << endl;
+			cout <<  "\n(main) response: '" << buff << "'\n" << endl;
 		}
 	} while (1);
 
@@ -127,7 +125,7 @@ void worker(SOCKET deamonCli) {
 		if (ret < 0) continue;
 		else {
 			buff[ret] = 0;
-			cout << "\n(deamon) response: '" << buff << "'" << endl;
+			cout << "\n(deamon) response: '" << buff << "'\n" << endl;
 		}
 	}
 }
