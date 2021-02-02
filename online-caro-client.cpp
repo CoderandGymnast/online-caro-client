@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	WORD wVersion = MAKEWORD(2, 2);
 	if (WSAStartup(wVersion, &wsaData)) printf("Version is not supported\n");
 
-	cout << "\nconnected\n" << endl;
+	cout << "\nclient started\n" << endl;
 
 	sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
