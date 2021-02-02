@@ -16,6 +16,7 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <fstream>
 
 #pragma comment (lib, "Ws2_32.lib")
 
@@ -126,6 +127,16 @@ void worker(SOCKET deamonCli) {
 		else {
 			buff[ret] = 0;
 			cout << "\n(deamon) response: '" << buff << "'\n" << endl;
+			if (buff[0] == 'H') {
+				ofstream file("history.txt");
+				if (!file) {
+					cout << "(error): could not store history\n" << endl;
+				}
+				else {
+					file << buff;
+				}
+				file.close();
+			}
 		}
 	}
 }
