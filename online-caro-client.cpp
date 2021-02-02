@@ -141,7 +141,7 @@ void worker(SOCKET deamonCli) {
 	}
 }
 
-/*
+/*8
 * [NOTES]:
 * Redundant allocation could cause incorrect console displaying.
 * "main" function's arguments are considers as a list of characters.
