@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
 
 	do {
 		gets_s(buff, BUFF_SIZE);
+		
 		if (strlen(buff) == 0) {
 			closesocket(client);
 			return 0;
@@ -100,6 +101,11 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
+
+/* set up deamon process
+* @param     deamonCli     listening socket for deamon process
+* @param     serverAddr     server address
+*/
 int setupDeamonCli(SOCKET deamonCli, sockaddr_in serverAddr) {
 
 	int tv = 60000;
@@ -113,6 +119,10 @@ int setupDeamonCli(SOCKET deamonCli, sockaddr_in serverAddr) {
 	return 1;
 }
 
+
+/* set up worker to process listening socket
+* @param     deamonCli     listening socket for deamon process
+*/
 void worker(SOCKET deamonCli) {
 
 	char buff[BUFF_SIZE];
@@ -120,9 +130,6 @@ void worker(SOCKET deamonCli) {
 
 	while (1) {
 		ret = recv(deamonCli, buff, BUFF_SIZE, 0);
-		/*
-		if (ret < 0) cout << "\ndeamon error: socket " << (int)deamonCli << " closed" << endl; 
-		*/
 		if (ret < 0) continue;
 		else {
 			buff[ret] = 0;
